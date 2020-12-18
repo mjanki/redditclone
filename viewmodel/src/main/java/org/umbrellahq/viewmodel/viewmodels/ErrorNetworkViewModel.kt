@@ -3,7 +3,10 @@ package org.umbrellahq.viewmodel.viewmodels
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.rxkotlin.addTo
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.umbrellahq.repository.repositories.ErrorRepository
 import org.umbrellahq.viewmodel.mappers.ErrorNetworkViewModelRepoMapper
 import org.umbrellahq.viewmodel.models.ErrorNetworkViewModelEntity
@@ -12,7 +15,7 @@ class ErrorNetworkViewModel(application: Application) : BaseViewModel(applicatio
     private lateinit var errorRepository: ErrorRepository
     private var errorsNetwork = MutableLiveData<List<ErrorNetworkViewModelEntity>>()
 
-    private var errorNetworkRepoViewModelMapper = ErrorNetworkViewModelRepoMapper()
+    private var errorNetworkViewModelRepoMapper = ErrorNetworkViewModelRepoMapper()
 
     fun init() {
         init(testErrorRepository = null)
@@ -22,22 +25,22 @@ class ErrorNetworkViewModel(application: Application) : BaseViewModel(applicatio
         errorRepository = testErrorRepository ?: ErrorRepository(getApplication())
         errorRepository.init()
 
-        errorRepository.getErrorsNetwork().subscribe { errorNetworkRepoEntityList ->
-            errorsNetwork.postValue(
-                    errorNetworkRepoEntityList.map { errorNetworkRepoEntity ->
-                        errorNetworkRepoViewModelMapper.upstream(errorNetworkRepoEntity)
-                    }
-            )
-        }.addTo(disposables)
+        viewModelScope.launch(Dispatchers.IO) {
+            errorRepository.getErrorsNetwork().collect {
+                errorsNetwork.postValue(it.map { error -> errorNetworkViewModelRepoMapper.upstream(error) })
+            }
+        }
     }
 
     fun getErrorsNetwork(): LiveData<List<ErrorNetworkViewModelEntity>> = errorsNetwork
 
     fun deleteErrorNetwork(errorNetworkViewModelEntity: ErrorNetworkViewModelEntity) {
-        errorRepository.deleteErrorNetwork(
-                errorNetworkRepoViewModelMapper.downstream(
-                        errorNetworkViewModelEntity
-                )
-        )
+        viewModelScope.launch(Dispatchers.IO) {
+            errorRepository.deleteErrorNetwork(
+                    errorNetworkViewModelRepoMapper.downstream(
+                            errorNetworkViewModelEntity
+                    )
+            )
+        }
     }
 }

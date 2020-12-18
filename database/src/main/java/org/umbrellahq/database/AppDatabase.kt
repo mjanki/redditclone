@@ -6,21 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import org.umbrellahq.database.daos.ErrorNetworkDatabaseDao
-
-import org.umbrellahq.database.daos.TaskDatabaseDao
+import org.umbrellahq.database.daos.PostDatabaseDao
 import org.umbrellahq.database.models.ErrorNetworkDatabaseEntity
-import org.umbrellahq.database.models.TaskDatabaseEntity
-import org.umbrellahq.database.type_converters.DateTypeConverter
+import org.umbrellahq.database.models.PostDatabaseEntity
 import org.umbrellahq.database.type_converters.ErrorNetworkTypeConverter
 
 @Database(entities = [
-    TaskDatabaseEntity::class,
+    PostDatabaseEntity::class,
     ErrorNetworkDatabaseEntity::class
 ], version = 1)
 
-@TypeConverters(DateTypeConverter::class, ErrorNetworkTypeConverter::class)
+@TypeConverters(ErrorNetworkTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun taskDao(): TaskDatabaseDao
+    abstract fun postDao(): PostDatabaseDao
     abstract fun errorNetworkDao(): ErrorNetworkDatabaseDao
 
     companion object {

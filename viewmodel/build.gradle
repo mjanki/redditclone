@@ -32,28 +32,32 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation libs.kotlin
-    implementation libs.lifecycleExtensions
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
 
-    // RxKotlin & RxAndroid
-    implementation libs.rxKotlin
-    implementation libs.rxAndroid
+    // ViewModel & LiveData
+    implementation "android.arch.lifecycle:extensions:$lifecycleExtensionsVersion"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleExtensionsVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleExtensionsVersion"
+
+    // Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
 
     // OffsetDateTime backport
-    implementation libs.threetenabp
+    implementation "com.jakewharton.threetenabp:threetenabp:$threetenabpVersion"
 
     // Testing
-    testImplementation libs.junit
-    androidTestImplementation libs.testJunitExt
-    androidTestImplementation libs.testRunner
-    implementation libs.archCoreTesting
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$testJunitExtVersion"
+    androidTestImplementation "androidx.test:runner:$testRunnerVersion"
+    implementation "androidx.arch.core:core-testing:$archCoreTestingVersion"
 
     // Mockito
-    testImplementation libs.mockitoKotlin
-    testImplementation libs.mockitoInline
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
+    testImplementation "org.mockito:mockito-inline:$mockitoInlineVersion"
 
     // Leak Canary
-    debugImplementation libs.leakCanary
+    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
 
     implementation project(':util')
     implementation project(':repository')

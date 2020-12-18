@@ -8,6 +8,19 @@
     <fragment
         android:id="@+id/mainFragment"
         android:name="org.umbrellahq.baseapp.fragments.MainFragment"
-        android:label="fragment_main"
-        tools:layout="@layout/fragment_main" />
+        android:label="Posts"
+        tools:layout="@layout/fragment_main">
+        <action
+            android:id="@+id/action_mainFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/detailsFragment"
+        android:name="org.umbrellahq.baseapp.fragments.DetailsFragment"
+        android:label="Post Details"
+        tools:layout="@layout/fragment_details">
+        <argument
+            android:name="postId"
+            app:argType="string" />
+    </fragment>
 </navigation>

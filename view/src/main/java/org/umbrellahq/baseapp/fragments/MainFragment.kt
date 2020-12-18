@@ -1,92 +1,73 @@
 package org.umbrellahq.baseapp.fragments
 
+import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import android.view.inputmethod.InputMethodManager
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_main.*
 import org.umbrellahq.baseapp.R
-import org.umbrellahq.baseapp.adapters.TasksRecyclerViewAdapter
-import org.umbrellahq.baseapp.mappers.TaskViewViewModelMapper
-import org.umbrellahq.baseapp.models.TaskViewEntity
-import org.umbrellahq.util.inflate
-import org.umbrellahq.viewmodel.models.TaskViewModelEntity
-import org.umbrellahq.viewmodel.viewmodels.TaskViewModel
+import org.umbrellahq.baseapp.adapters.PostsRecyclerViewAdapter
+import org.umbrellahq.baseapp.mappers.PostViewViewModelMapper
+import org.umbrellahq.viewmodel.viewmodels.PostsViewModel
 
-class MainFragment : BaseFragment() {
-    private lateinit var taskVM: TaskViewModel
+class MainFragment : Fragment(R.layout.fragment_main) {
+    private lateinit var postsVM: PostsViewModel
 
-    private val taskViewViewModelMapper = TaskViewViewModelMapper()
+    private val postsRecyclerViewAdapter = PostsRecyclerViewAdapter(arrayOf())
 
-    private val tasksRecyclerViewAdapter = TasksRecyclerViewAdapter(arrayOf())
-    private val linearLayoutManager = LinearLayoutManager(activity)
+    private val postViewViewModelMapper = PostViewViewModelMapper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        taskVM = ViewModelProviders.of(this).get(TaskViewModel::class.java)
-        taskVM.init()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return container?.inflate(R.layout.fragment_main)
+        postsVM = ViewModelProviders.of(this).get(PostsViewModel::class.java)
+        postsVM.init()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupTasksRecyclerView()
+        bSearch.setOnClickListener {
+            postsVM.retrievePosts("${etSearch.text}")
 
-        setupTasksObservers()
-        setupTasksClickListeners()
-    }
-
-    private fun setupTasksRecyclerView() {
-        rvTasks.apply {
-            layoutManager = linearLayoutManager
-            adapter = tasksRecyclerViewAdapter
+            val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(clMainFragment.windowToken, 0)
         }
 
-        srlTasksRefresh.setOnRefreshListener {
-            taskVM.retrieveTasks()
-        }
+        setupPostsRecyclerView()
+        setupPostsObservers()
     }
 
-    private fun setupTasksObservers() {
-        taskVM.getAllTasks().observe(viewLifecycleOwner, Observer<List<TaskViewModelEntity>> {
-            tasksRecyclerViewAdapter.tasks = it.map { taskViewModelEntity ->
-                taskViewViewModelMapper.upstream(taskViewModelEntity)
-            }.toTypedArray()
+    private fun setupPostsRecyclerView() {
+        recyclerView.adapter = postsRecyclerViewAdapter
+        recyclerView.layoutManager = LinearLayoutManager(activity)
 
-            if (!taskVM.insertingTask) {
-                tasksRecyclerViewAdapter.notifyDataSetChanged()
-                return@Observer
-            }
-
-            tasksRecyclerViewAdapter.notifyItemInserted(0)
-            linearLayoutManager.scrollToPosition(0)
-
-            taskVM.insertingTask = false
-        })
-
-        taskVM.getIsRetrievingTasks().observe(viewLifecycleOwner, Observer {
-            srlTasksRefresh.isRefreshing = it
-        })
-    }
-
-    private fun setupTasksClickListeners() {
-        fabAddTask.setOnClickListener {
-            taskVM.insertingTask = true
-            taskVM.insertTask(
-                    taskViewViewModelMapper.downstream(
-                            TaskViewEntity(
-                                    name = "New Task ${taskVM.getAllTasks().value?.size}"
-                            )
-                    )
+        postsRecyclerViewAdapter.onClick = {
+            findNavController().navigate(
+                    MainFragmentDirections.actionMainFragmentToDetailsFragment(it.id)
             )
         }
+    }
+
+    private fun setupPostsObservers() {
+        postsVM.allPosts.observe(viewLifecycleOwner, {
+            postsRecyclerViewAdapter.posts = it.map { postViewModelEntity ->
+                postViewViewModelMapper.upstream(postViewModelEntity)
+            }.toTypedArray()
+
+            postsRecyclerViewAdapter.notifyDataSetChanged()
+        })
+
+        postsVM.getIsRetrievingPosts().observe(viewLifecycleOwner, {
+            compLoading.visibility = if (it) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+        })
     }
 }
